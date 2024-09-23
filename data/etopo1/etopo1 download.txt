@@ -1,0 +1,4 @@
+you will need this file:
+https://www.opentopodata.org/datasets/etopo1/
+
+and extract it here, as file: ETOPO1_Ice_g_geotiff.tif
