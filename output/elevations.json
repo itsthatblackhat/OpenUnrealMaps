@@ -1,0 +1,21 @@
+{
+  "results": [
+    {
+      "dataset": "test-dataset",
+      "elevation": -557.4539184570312,
+      "location": {
+        "lat": 50.33844888725473,
+        "lng": -127.96875000000001
+      }
+    },
+    {
+      "dataset": "test-dataset",
+      "elevation": -3691.33837890625,
+      "location": {
+        "lat": 17.38209494787749,
+        "lng": -61.08398437500001
+      }
+    }
+  ],
+  "status": "OK"
+}
