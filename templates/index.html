@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenUnrealMaps Elevation Data Service</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+    <style>
+        #map { height: 600px; width: 100%; }
+        .controls {
+            margin-top: 10px;
+        }
+        button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>OpenUnrealMaps Elevation Data Service</h1>
+    <div id="map"></div>
+    <div class="controls">
+        <button onclick="fetchElevationData()">Get Elevation Data</button>
+        <button onclick="createHeightMap()">Create Heightmap</button>
+        <button onclick="exportDTM()">Export for DTM (GeoTIFF)</button>
+        <button onclick="exportDTMPNG()">Export for DTM (PNG)</button> <!-- New Button for DTM PNG Export -->
+        <button onclick="extractRoadsData()">Extract Roads Data</button>
+        <button onclick="extractWaterData()">Extract Rivers/Lakes/Ocean Data</button>
+        <button onclick="createTopologyMap()">Create Topology Map</button>
+    </div>
+    <div id="output"></div>
+
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css"/>
+    <script>
+        const map = L.map('map').setView([39.8283, -98.5795], 4);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+        }).addTo(map);
+
+        let drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        let drawControl = new L.Control.Draw({
+            edit: {
+                featureGroup: drawnItems
+            }
+        });
+        map.addControl(drawControl);
+
+        map.on('draw:created', function (e) {
+            let layer = e.layer;
+            drawnItems.addLayer(layer);
+        });
+
+        function getBoundsData() {
+            const bounds = drawnItems.getBounds();
+            if (!bounds) {
+                alert('Please draw a bounding box.');
+                return null;
+            }
+
+            return {
+                north: bounds.getNorth(),
+                south: bounds.getSouth(),
+                east: bounds.getEast(),
+                west: bounds.getWest()
+            };
+        }
+
+        function fetchElevationData() {
+            const bbox = getBoundsData();
+            if (!bbox) return;
+
+            fetch('/get-elevation', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bbox })
+            }).then(response => response.json())
+            .then(data => {
+                document.getElementById('output').innerText = JSON.stringify(data, null, 2);
+                downloadFile('elevations.json', JSON.stringify(data, null, 2));
+            }).catch(error => {
+                console.error('Error fetching elevation data:', error);
+            });
+        }
+
+        function createHeightMap() {
+            const bbox = getBoundsData();
+            if (!bbox) return;
+
+            fetch('/create-heightmap', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bbox })
+            }).then(response => response.json())
+            .then(data => {
+                alert('Heightmap created successfully!');
+            }).catch(error => {
+                console.error('Error creating heightmap:', error);
+            });
+        }
+
+        function exportDTM() {
+            const bbox = getBoundsData();
+            if (!bbox) return;
+
+            fetch('/export-dtm', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bbox })
+            }).then(response => response.json())
+            .then(data => {
+                alert('DTM exported successfully!');
+            }).catch(error => {
+                console.error('Error exporting DTM:', error);
+            });
+        }
+
+        function exportDTMPNG() { // New Function for DTM PNG Export
+            const bbox = getBoundsData();
+            if (!bbox) return;
+
+            fetch('/export-dtm-png', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bbox })
+            }).then(response => response.json())
+            .then(data => {
+                alert('DTM PNG exported successfully!');
+            }).catch(error => {
+                console.error('Error exporting DTM PNG:', error);
+            });
+        }
+
+        function extractRoadsData() {
+            const bbox = getBoundsData();
+            if (!bbox) return;
+
+            fetch('/extract-roads', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bbox })
+            }).then(response => response.json())
+            .then(data => {
+                alert('Roads data extracted successfully!');
+            }).catch(error => {
+                console.error('Error extracting roads data:', error);
+            });
+        }
+
+        function extractWaterData() {
+            const bbox = getBoundsData();
+            if (!bbox) return;
+
+            fetch('/extract-water', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bbox })
+            }).then(response => response.json())
+            .then(data => {
+                alert('Water data extracted successfully!');
+            }).catch(error => {
+                console.error('Error extracting water data:', error);
+            });
+        }
+
+        function createTopologyMap() {
+            const bbox = getBoundsData();
+            if (!bbox) return;
+
+            fetch('/create-topology-map', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ bbox })
+            }).then(response => response.json())
+            .then(data => {
+                alert('Topology map created successfully!');
+            }).catch(error => {
+                console.error('Error creating topology map:', error);
+            });
+        }
+
+        function downloadFile(filename, content) {
+            const blob = new Blob([content], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = filename;
+            link.click();
+        }
+    </script>
+</body>
+</html>
